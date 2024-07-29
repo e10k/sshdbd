@@ -1,0 +1,13 @@
+[connections.main]
+host = "localhost"
+port = 3306
+dbname = "sakila"
+username = "usr"
+password = "pass"
+
+[connections.another]
+host = "localhost"
+port = 3306
+dbname = "another_db"
+username = "usr"
+password = "pass"
