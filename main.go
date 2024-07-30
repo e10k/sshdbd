@@ -101,11 +101,4 @@ func main() {
 	gz.Flush()
 	gz.Close()
 	io.Copy(os.Stdout, &gzbuf)
-
-	// create a config (read from options)
-	// dump db structure; put mysqldump stdout output in a buffer; send stderr output to stderr
-	// dump db data; put mysqldump stdout output in a buffer; send stderr output to stderr
-	// gzip the buffer while it's written
-	// stream the gzipped output to stdout
-	// show progress bar while the dump progresses
 }
