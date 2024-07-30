@@ -61,48 +61,48 @@ func main() {
 	fmt.Fprintln(os.Stderr, conn)
 
 	pr, pw := io.Pipe()
-	defer pw.Close()
-	//var gzbuf bytes.Buffer
+
 	gz := gzip.NewWriter(pw)
 
 	go func() {
-		defer pr.Close()
-		io.Copy(os.Stdout, pr)
+		defer pw.Close()
+		defer gz.Close()
+
+		dumpSchemaCmd := exec.Command(
+			"mysqldump",
+			"--single-transaction",
+			"--databases",
+			"--no-data",
+			"--skip-add-drop-table",
+			"--verbose",
+			"-h",
+			conn.Host,
+			fmt.Sprintf("-u%s", conn.Username),
+			fmt.Sprintf("-p%s", conn.Password),
+			conn.Dbname,
+		)
+		dumpSchemaCmd.Stdout = gz
+		dumpSchemaCmd.Stderr = os.Stderr
+		dumpSchemaCmd.Run()
+
+		dumpDataCmd := exec.Command(
+			"mysqldump",
+			"--single-transaction",
+			"--tz-utc=false",
+			"--no-create-info",
+			"--verbose",
+			"-h",
+			conn.Host,
+			fmt.Sprintf("-u%s", conn.Username),
+			fmt.Sprintf("-p%s", conn.Password),
+			conn.Dbname,
+			"--ignore-table=sakila.film",
+		)
+		dumpDataCmd.Stdout = gz
+		dumpDataCmd.Stderr = os.Stderr
+		dumpDataCmd.Run()
 	}()
 
-	dumpSchemaCmd := exec.Command(
-		"mysqldump",
-		"--single-transaction",
-		"--databases",
-		"--no-data",
-		"--skip-add-drop-table",
-		"--verbose",
-		"-h",
-		conn.Host,
-		fmt.Sprintf("-u%s", conn.Username),
-		fmt.Sprintf("-p%s", conn.Password),
-		conn.Dbname,
-	)
-	dumpSchemaCmd.Stdout = gz
-	dumpSchemaCmd.Stderr = os.Stderr
-	dumpSchemaCmd.Run()
-
-	dumpDataCmd := exec.Command(
-		"mysqldump",
-		"--single-transaction",
-		"--tz-utc=false",
-		"--no-create-info",
-		"--verbose",
-		"-h",
-		conn.Host,
-		fmt.Sprintf("-u%s", conn.Username),
-		fmt.Sprintf("-p%s", conn.Password),
-		conn.Dbname,
-		"--ignore-table=sakila.film",
-	)
-	dumpDataCmd.Stdout = gz
-	dumpDataCmd.Stderr = os.Stderr
-	dumpDataCmd.Run()
-
-	gz.Close()
+	defer pr.Close()
+	io.Copy(os.Stdout, pr)
 }
