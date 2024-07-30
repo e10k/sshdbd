@@ -1,27 +1,14 @@
 package main
 
 import (
-	"compress/gzip"
 	"flag"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 
 	"github.com/BurntSushi/toml"
+	"github.com/e10k/dbdl/config"
+	"github.com/e10k/dbdl/mysqldump"
 )
-
-type Connection struct {
-	Host     string
-	Port     int
-	Dbname   string
-	Username string
-	Password string
-}
-
-type Config struct {
-	Connections map[string]Connection
-}
 
 var connId *string
 var dbName *string
@@ -46,7 +33,7 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "connId: %#v, dbName: %#v\n", *connId, *dbName)
 
-	var conf Config
+	var conf config.Config
 	_, err := toml.DecodeFile("config.toml", &conf)
 	if err != nil {
 		panic(err)
@@ -60,49 +47,8 @@ func main() {
 
 	fmt.Fprintln(os.Stderr, conn)
 
-	pr, pw := io.Pipe()
-
-	gz := gzip.NewWriter(pw)
-
-	go func() {
-		defer pw.Close()
-		defer gz.Close()
-
-		dumpSchemaCmd := exec.Command(
-			"mysqldump",
-			"--single-transaction",
-			"--databases",
-			"--no-data",
-			"--skip-add-drop-table",
-			"--verbose",
-			"-h",
-			conn.Host,
-			fmt.Sprintf("-u%s", conn.Username),
-			fmt.Sprintf("-p%s", conn.Password),
-			conn.Dbname,
-		)
-		dumpSchemaCmd.Stdout = gz
-		dumpSchemaCmd.Stderr = os.Stderr
-		dumpSchemaCmd.Run()
-
-		dumpDataCmd := exec.Command(
-			"mysqldump",
-			"--single-transaction",
-			"--tz-utc=false",
-			"--no-create-info",
-			"--verbose",
-			"-h",
-			conn.Host,
-			fmt.Sprintf("-u%s", conn.Username),
-			fmt.Sprintf("-p%s", conn.Password),
-			conn.Dbname,
-			"--ignore-table=sakila.film",
-		)
-		dumpDataCmd.Stdout = gz
-		dumpDataCmd.Stderr = os.Stderr
-		dumpDataCmd.Run()
-	}()
-
-	defer pr.Close()
-	io.Copy(os.Stdout, pr)
+	err = mysqldump.Dump(&conn, os.Stdout, os.Stderr)
+	if err != nil {
+		panic(err)
+	}
 }
