@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"compress/gzip"
 	"flag"
 	"fmt"
@@ -61,8 +60,15 @@ func main() {
 
 	fmt.Fprintln(os.Stderr, conn)
 
-	var gzbuf bytes.Buffer
-	gz := gzip.NewWriter(&gzbuf)
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	//var gzbuf bytes.Buffer
+	gz := gzip.NewWriter(pw)
+
+	go func() {
+		defer pr.Close()
+		io.Copy(os.Stdout, pr)
+	}()
 
 	dumpSchemaCmd := exec.Command(
 		"mysqldump",
@@ -98,7 +104,5 @@ func main() {
 	dumpDataCmd.Stderr = os.Stderr
 	dumpDataCmd.Run()
 
-	gz.Flush()
 	gz.Close()
-	io.Copy(os.Stdout, &gzbuf)
 }
