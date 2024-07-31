@@ -38,7 +38,6 @@ func main() {
 	conn.Dbname = dbName
 
 	ssh.Handle(func(s ssh.Session) {
-		//s.Stderr().Write([]byte(comment))
 		log.Println(comment)
 		err = mysqldump.Dump(&conn, s, s.Stderr())
 		if err != nil {

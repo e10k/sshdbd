@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"time"
 
 	"github.com/e10k/dbdl/config"
 )
@@ -35,8 +34,6 @@ func Dump(conn *config.Connection, outWriter io.Writer, errWriter io.Writer) err
 		dumpSchemaCmd.Stdout = gz
 		dumpSchemaCmd.Stderr = errWriter
 		dumpSchemaCmd.Run()
-
-		time.Sleep(5 * time.Second)
 
 		dumpDataCmd := exec.Command(
 			"mysqldump",
