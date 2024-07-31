@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/e10k/dbdl/config"
@@ -18,9 +19,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	connId := "main"
-	dbName := "sakila"
-
 	var conf config.Config
 	_, err = toml.DecodeFile("config.toml", &conf)
 	if err != nil {
@@ -28,18 +26,21 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
-	conn, ok := conf.Connections[connId]
-	if !ok {
-		panic("invalid connection id")
-	}
-
-	fmt.Fprintln(os.Stderr, conn)
-
-	conn.Dbname = dbName
-
 	ssh.Handle(func(s ssh.Session) {
 		log.Println(comment)
-		err = mysqldump.Dump(&conn, s, s.Stderr())
+		connId, dbName, err := parseInput(s.User())
+		if err != nil {
+			panic(err)
+		}
+
+		conn, ok := conf.Connections[connId]
+		if !ok {
+			panic("invalid connection id")
+		}
+
+		log.Printf("connId: %v, dbName: %v", connId, dbName)
+
+		err = mysqldump.Dump(&conn, dbName, s, s.Stderr())
 		if err != nil {
 			panic(err)
 		}
@@ -52,4 +53,14 @@ func main() {
 
 	log.Println("starting ssh server on port 2222...")
 	log.Fatal(ssh.ListenAndServe(":2222", nil, publicKeyOption))
+}
+
+func parseInput(s string) (string, string, error) {
+	s = strings.Trim(s, " ")
+	slice := strings.Split(s, ":")
+	if len(slice) != 2 {
+		return "", "", fmt.Errorf("unexpected input data format: %s", s)
+	}
+
+	return slice[0], slice[1], nil
 }

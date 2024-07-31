@@ -9,7 +9,7 @@ import (
 	"github.com/e10k/dbdl/config"
 )
 
-func Dump(conn *config.Connection, outWriter io.Writer, errWriter io.Writer) error {
+func Dump(conn *config.Connection, dbName string, outWriter io.Writer, errWriter io.Writer) error {
 	pr, pw := io.Pipe()
 
 	gz := gzip.NewWriter(pw)
@@ -29,7 +29,7 @@ func Dump(conn *config.Connection, outWriter io.Writer, errWriter io.Writer) err
 			conn.Host,
 			fmt.Sprintf("-u%s", conn.Username),
 			fmt.Sprintf("-p%s", conn.Password),
-			conn.Dbname,
+			dbName,
 		)
 		dumpSchemaCmd.Stdout = gz
 		dumpSchemaCmd.Stderr = errWriter
@@ -45,7 +45,7 @@ func Dump(conn *config.Connection, outWriter io.Writer, errWriter io.Writer) err
 			conn.Host,
 			fmt.Sprintf("-u%s", conn.Username),
 			fmt.Sprintf("-p%s", conn.Password),
-			conn.Dbname,
+			dbName,
 			"--ignore-table=sakila.film",
 		)
 		dumpDataCmd.Stdout = gz
