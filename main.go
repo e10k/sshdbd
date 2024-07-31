@@ -1,10 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/BurntSushi/toml"
 	"github.com/e10k/dbdl/config"
@@ -35,10 +40,19 @@ func main() {
 
 		conn, ok := conf.Connections[connId]
 		if !ok {
-			panic("invalid connection id")
+			s.Stderr().Write([]byte(fmt.Sprintf("Invalid connection id '%v'.\n", connId)))
+			return
 		}
 
 		log.Printf("connId: %v, dbName: %v", connId, dbName)
+
+		databases, err := getDatabases(&conn)
+		log.Printf("databases: %#v", databases)
+
+		if !slices.Contains(databases, dbName) {
+			s.Stderr().Write([]byte(fmt.Sprintf("Couldn't find a database named '%v'.\n", dbName)))
+			return
+		}
 
 		err = mysqldump.Dump(&conn, dbName, s, s.Stderr())
 		if err != nil {
@@ -48,11 +62,13 @@ func main() {
 
 	publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 		return ssh.KeysEqual(key, known)
-		// return true // allow all keys, or use ssh.KeysEqual() to compare against known keys
 	})
 
 	log.Println("starting ssh server on port 2222...")
-	log.Fatal(ssh.ListenAndServe(":2222", nil, publicKeyOption))
+	err = ssh.ListenAndServe(":2222", nil, publicKeyOption)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func parseInput(s string) (string, string, error) {
@@ -63,4 +79,35 @@ func parseInput(s string) (string, string, error) {
 	}
 
 	return slice[0], slice[1], nil
+}
+
+func getDatabases(conn *config.Connection) ([]string, error) {
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/?charset=utf8mb4&parseTime=True&loc=Local", conn.Username, conn.Password, conn.Host, conn.Port)
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, errors.New("could not connect to the database")
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SHOW DATABASES;")
+	if err != nil {
+		return nil, errors.New("could not list the databases")
+	}
+	defer rows.Close()
+
+	var databases []string
+	for rows.Next() {
+		var dbName string
+		if err := rows.Scan(&dbName); err != nil {
+			return nil, errors.New("failed fetching the databases")
+		}
+		databases = append(databases, dbName)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.New("failed fetching the databases")
+	}
+
+	return databases, nil
 }
