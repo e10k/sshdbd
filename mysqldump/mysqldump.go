@@ -4,12 +4,13 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 
 	"github.com/e10k/dbdl/config"
 )
 
-func Dump(conn *config.Connection, dbName string, outWriter io.Writer, errWriter io.Writer) error {
+func Dump(conn *config.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
 	pr, pw := io.Pipe()
 
 	gz := gzip.NewWriter(pw)
@@ -46,8 +47,14 @@ func Dump(conn *config.Connection, dbName string, outWriter io.Writer, errWriter
 			fmt.Sprintf("-u%s", conn.Username),
 			fmt.Sprintf("-p%s", conn.Password),
 			dbName,
-			"--ignore-table=sakila.film",
 		)
+
+		log.Printf("skippedTables: %#v", skippedTables)
+		for _, t := range skippedTables {
+			dumpDataCmd.Args = append(dumpDataCmd.Args, fmt.Sprintf("--ignore-table=%v.%v", dbName, t))
+		}
+
+		log.Printf("args: %#v", dumpDataCmd.Args)
 		dumpDataCmd.Stdout = gz
 		dumpDataCmd.Stderr = errWriter
 		dumpDataCmd.Run()

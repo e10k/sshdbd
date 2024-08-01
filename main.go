@@ -33,7 +33,7 @@ func main() {
 
 	ssh.Handle(func(s ssh.Session) {
 		log.Println(comment)
-		connId, dbName, err := parseInput(s.User())
+		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
 			panic(err)
 		}
@@ -54,7 +54,7 @@ func main() {
 			return
 		}
 
-		err = mysqldump.Dump(&conn, dbName, s, s.Stderr())
+		err = mysqldump.Dump(&conn, dbName, skippedTables, s, s.Stderr())
 		if err != nil {
 			panic(err)
 		}
@@ -71,14 +71,28 @@ func main() {
 	}
 }
 
-func parseInput(s string) (string, string, error) {
+func parseInput(s string) (string, string, []string, error) {
 	s = strings.Trim(s, " ")
 	slice := strings.Split(s, ":")
-	if len(slice) != 2 {
-		return "", "", fmt.Errorf("unexpected input data format: %s", s)
+
+	// a valid input will have one of these forms:
+	//    main:sakila (connection id + database name)
+	//    main:sakila:table_1,table_2,table_3 (connection id + database name + comma separated list of table names)
+	l := len(slice)
+	if l == 3 {
+		var tables []string
+		for _, t := range strings.Split(slice[2], ",") {
+			t = strings.Trim(t, " ")
+			if len(t) > 0 {
+				tables = append(tables, t)
+			}
+		}
+		return slice[0], slice[1], tables, nil
+	} else if l == 2 {
+		return slice[0], slice[1], nil, nil
 	}
 
-	return slice[0], slice[1], nil
+	return "", "", nil, fmt.Errorf("unexpected input data format: %s", s)
 }
 
 func getDatabases(conn *config.Connection) ([]string, error) {
