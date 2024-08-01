@@ -19,20 +19,14 @@ import (
 )
 
 func main() {
-	known, comment, _, _, err := gossh.ParseAuthorizedKey([]byte("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINMgfBf9NEfplAqXjMdiHCPM0J+f6JVJX4BE2SfEkvPr emi"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var conf config.Config
-	_, err = toml.DecodeFile("config.toml", &conf)
+	_, err := toml.DecodeFile("config.toml", &conf)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
 	ssh.Handle(func(s ssh.Session) {
-		log.Println(comment)
 		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
 			panic(err)
@@ -60,11 +54,25 @@ func main() {
 		}
 	})
 
+	log.Println("starting ssh server on port 2222...")
+
 	publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
-		return ssh.KeysEqual(key, known)
+		for _, k := range getKeys() {
+			known, comment, _, _, err := gossh.ParseAuthorizedKey([]byte(k))
+			if err != nil {
+				log.Printf("encountered invalid public key: %v\n", k)
+				continue
+			}
+
+			if ssh.KeysEqual(key, known) {
+				fmt.Printf("found valid key, having comment %v\n", comment)
+				return true
+			}
+		}
+
+		return false
 	})
 
-	log.Println("starting ssh server on port 2222...")
 	err = ssh.ListenAndServe(":2222", nil, publicKeyOption)
 	if err != nil {
 		log.Fatal(err)
@@ -124,4 +132,21 @@ func getDatabases(conn *config.Connection) ([]string, error) {
 	}
 
 	return databases, nil
+}
+
+func getKeys() []string {
+	content, err := os.ReadFile("authorized_keys")
+	if err != nil {
+		return nil
+	}
+
+	var keys []string
+	for _, k := range strings.Split(string(content), "\n") {
+		k = strings.Trim(k, " ")
+		if len(k) > 0 {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys
 }
