@@ -1,4 +1,5 @@
 .DS_Store
 config.toml
 authorized_keys
+bin
 
