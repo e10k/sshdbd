@@ -26,7 +26,7 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
-	ssh.Handle(func(s ssh.Session) {
+	sessionHandler := func(s ssh.Session) {
 		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
 			panic(err)
@@ -52,11 +52,9 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-	})
+	}
 
-	log.Println("starting ssh server on port 2222...")
-
-	publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+	authHandler := func(ctx ssh.Context, key ssh.PublicKey) bool {
 		for _, k := range getKeys() {
 			known, comment, _, _, err := gossh.ParseAuthorizedKey([]byte(k))
 			if err != nil {
@@ -71,9 +69,17 @@ func main() {
 		}
 
 		return false
-	})
+	}
 
-	err = ssh.ListenAndServe(":2222", nil, publicKeyOption)
+	server := &ssh.Server{
+		Addr:             ":2222",
+		Handler:          sessionHandler,
+		PublicKeyHandler: authHandler,
+	}
+
+	log.Println("starting ssh server on port 2222...")
+
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
