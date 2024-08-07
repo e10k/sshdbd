@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +11,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/e10k/dbdl/config"
-	"github.com/e10k/dbdl/database"
+	"github.com/e10k/dbdl/db"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -40,7 +38,7 @@ func main() {
 
 		log.Printf("connId: %v, dbName: %v", connId, dbName)
 
-		databases, err := getDatabases(&conn)
+		databases, err := db.GetDatabases(&conn)
 		log.Printf("databases: %#v", databases)
 
 		if !slices.Contains(databases, dbName) {
@@ -48,7 +46,7 @@ func main() {
 			return
 		}
 
-		err = database.Dump(&conn, dbName, skippedTables, s, s.Stderr())
+		err = db.Dump(&conn, dbName, skippedTables, s, s.Stderr())
 		if err != nil {
 			panic(err)
 		}
@@ -107,37 +105,6 @@ func parseInput(s string) (string, string, []string, error) {
 	}
 
 	return "", "", nil, fmt.Errorf("unexpected input data format: %s", s)
-}
-
-func getDatabases(conn *config.Connection) ([]string, error) {
-	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/?charset=utf8mb4&parseTime=True&loc=Local", conn.Username, conn.Password, conn.Host, conn.Port)
-
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, errors.New("could not connect to the database")
-	}
-	defer db.Close()
-
-	rows, err := db.Query("SHOW DATABASES;")
-	if err != nil {
-		return nil, errors.New("could not list the databases")
-	}
-	defer rows.Close()
-
-	var databases []string
-	for rows.Next() {
-		var dbName string
-		if err := rows.Scan(&dbName); err != nil {
-			return nil, errors.New("failed fetching the databases")
-		}
-		databases = append(databases, dbName)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, errors.New("failed fetching the databases")
-	}
-
-	return databases, nil
 }
 
 func getKeys() []string {

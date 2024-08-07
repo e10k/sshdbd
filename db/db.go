@@ -1,7 +1,9 @@
-package database
+package db
 
 import (
 	"compress/gzip"
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -64,4 +66,35 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 	io.Copy(outWriter, pr)
 
 	return nil
+}
+
+func GetDatabases(conn *config.Connection) ([]string, error) {
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/?charset=utf8mb4&parseTime=True&loc=Local", conn.Username, conn.Password, conn.Host, conn.Port)
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, errors.New("could not connect to the database")
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SHOW DATABASES;")
+	if err != nil {
+		return nil, errors.New("could not list the databases")
+	}
+	defer rows.Close()
+
+	var databases []string
+	for rows.Next() {
+		var dbName string
+		if err := rows.Scan(&dbName); err != nil {
+			return nil, errors.New("failed fetching the databases")
+		}
+		databases = append(databases, dbName)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.New("failed fetching the databases")
+	}
+
+	return databases, nil
 }
