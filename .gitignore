@@ -2,4 +2,6 @@
 config.toml
 authorized_keys
 bin
+deploy.sh
+
 
