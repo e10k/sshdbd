@@ -1,4 +1,4 @@
-package mysqldump
+package database
 
 import (
 	"compress/gzip"

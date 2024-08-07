@@ -13,7 +13,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/e10k/dbdl/config"
-	"github.com/e10k/dbdl/mysqldump"
+	"github.com/e10k/dbdl/database"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -48,7 +48,7 @@ func main() {
 			return
 		}
 
-		err = mysqldump.Dump(&conn, dbName, skippedTables, s, s.Stderr())
+		err = database.Dump(&conn, dbName, skippedTables, s, s.Stderr())
 		if err != nil {
 			panic(err)
 		}
