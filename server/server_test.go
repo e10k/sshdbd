@@ -2,6 +2,8 @@ package server
 
 import (
 	"errors"
+	"os"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -14,7 +16,7 @@ type ParsedInput struct {
 	error    error
 }
 
-func TestSomething(t *testing.T) {
+func TestParseInput(t *testing.T) {
 	tests := []ParsedInput{
 		{
 			original: "main:sakila",
@@ -80,6 +82,26 @@ func TestSomething(t *testing.T) {
 		if err.Error() != p.error.Error() {
 			t.Errorf("wanted error %q, got %q", p.error, err)
 		}
+	}
+}
+
+func TestGetKeys(t *testing.T) {
+	f, _ := os.CreateTemp("", "temp_authorized_keys")
+	defer os.Remove(f.Name())
+
+	keys := getKeys(f.Name())
+
+	if !slices.Equal([]string{}, keys) {
+		t.Errorf("expected %q, got %q", []string{}, keys)
+	}
+
+	f.WriteString("\n\nssh-abc 0J+f6JVJX4BE2SfEkv comment\nssh-def 123 comment\n       ssh-ghi aaa comment\n\nfoo bar baz")
+
+	keys = getKeys(f.Name())
+
+	expected := []string{"ssh-abc 0J+f6JVJX4BE2SfEkv comment", "ssh-def 123 comment", "ssh-ghi aaa comment", "foo bar baz"}
+	if !slices.Equal(expected, keys) {
+		t.Errorf("expected %q, got %q", expected, keys)
 	}
 
 }

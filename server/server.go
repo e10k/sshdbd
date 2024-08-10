@@ -49,7 +49,7 @@ func NewServer(conf config.Config) *ssh.Server {
 }
 
 func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
-	for _, k := range getKeys() {
+	for _, k := range getKeys("authorized_keys") {
 		known, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
 		if err != nil {
 			log.Printf("encountered invalid public key: %v\n", k)
@@ -65,8 +65,8 @@ func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	return false
 }
 
-func getKeys() []string {
-	content, err := os.ReadFile("authorized_keys")
+func getKeys(sourceFile string) []string {
+	content, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return nil
 	}
