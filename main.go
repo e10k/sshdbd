@@ -2,8 +2,10 @@ package main
 
 import (
 	"log"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/BurntSushi/toml"
 	"github.com/e10k/dbdl/config"
@@ -20,7 +22,21 @@ func main() {
 
 	log.Println("starting ssh server on port 2222...")
 
-	err = server.NewServer(conf).ListenAndServe()
+	srv := server.NewServer(conf)
+
+	privateBytes, err := os.ReadFile("id_rsa")
+	if err != nil {
+		log.Fatal("failed to load private key: ", err)
+	}
+
+	private, err := ssh.ParsePrivateKey(privateBytes)
+	if err != nil {
+		log.Fatal("failed to parse private key: ", err)
+	}
+
+	srv.AddHostKey(private)
+
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
