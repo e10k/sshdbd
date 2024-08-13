@@ -1,6 +1,10 @@
 package server
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"os"
@@ -104,4 +108,23 @@ func parseInput(s string) (string, string, []string, error) {
 	}
 
 	return "", "", nil, fmt.Errorf("unexpected input data format: %s", s)
+}
+
+func GenerateHostKeyBytes() ([]byte, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return nil, err
+	}
+
+	err = privateKey.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	pemBlock := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PrivateKey(privateKey),
+	}
+	return pem.EncodeToMemory(&pemBlock), nil
 }
