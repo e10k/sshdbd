@@ -13,11 +13,11 @@ import (
 )
 
 func main() {
-	hk, err := server.GenerateHostKeyBytes()
-	os.WriteFile("test.pem", hk, 0600)
+	// hk, err := server.GenerateHostKeyBytes()
+	// os.WriteFile("test.pem", hk, 0600)
 
 	var conf config.Config
-	_, err = toml.DecodeFile("config.toml", &conf)
+	_, err := toml.DecodeFile("config.toml", &conf)
 	if err != nil {
 		panic(err)
 	}
@@ -43,4 +43,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func setup() {
+	// ~/.sshdbd
+	// - if ~/sshdbd does not exist, create it
+	// - if ~/sshdbd/config.toml does not exist, create it
+	// - if ~/sshdbd/authorized_keys does not exist, create it
+	// - if ~/sshdbd/hostkey.pem does not exist, create it
 }
