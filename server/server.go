@@ -11,19 +11,19 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/e10k/dbdl/config"
 	"github.com/e10k/dbdl/db"
+	"github.com/e10k/dbdl/settings"
 	"github.com/gliderlabs/ssh"
 )
 
-func NewServer(conf config.Config) *ssh.Server {
+func NewServer(settings *settings.Settings) *ssh.Server {
 	sessionHandler := func(s ssh.Session) {
 		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
 			panic(err)
 		}
 
-		conn, err := conf.GetConnection(connId)
+		conn, err := settings.Config.GetConnection(connId)
 		if err != nil {
 			s.Stderr().Write([]byte(string(err.Error())))
 			return
