@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -15,6 +17,24 @@ import (
 func main() {
 	// hk, err := server.GenerateHostKeyBytes()
 	// os.WriteFile("test.pem", hk, 0600)
+
+	flag.Parse()
+	if len(flag.Args()) < 1 {
+		fmt.Println("Please specify a command.")
+		os.Exit(1)
+	}
+
+	command := flag.Arg(0)
+
+	switch command {
+	case "install":
+		handleInstallCommand(flag.Args()[1:])
+	case "serve":
+		handleServeCommand(flag.Args()[1:])
+	default:
+		fmt.Printf("Unknown command: %s\n", command)
+		os.Exit(1)
+	}
 
 	var conf config.Config
 	_, err := toml.DecodeFile("config.toml", &conf)
@@ -45,10 +65,10 @@ func main() {
 	}
 }
 
-func setup() {
-	// ~/.sshdbd
-	// - if ~/sshdbd does not exist, create it
-	// - if ~/sshdbd/config.toml does not exist, create it
-	// - if ~/sshdbd/authorized_keys does not exist, create it
-	// - if ~/sshdbd/hostkey.pem does not exist, create it
+func handleInstallCommand(args []string) {
+	//
+}
+
+func handleServeCommand(args []string) {
+	//
 }
