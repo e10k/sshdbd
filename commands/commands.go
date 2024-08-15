@@ -65,7 +65,7 @@ func HandleServeCommand(args []string, settings *settings.Settings) {
 
 	// fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
-	log.Println("starting ssh server on port 2222...")
+	log.Printf("starting ssh server on port %v...", settings.Port)
 
 	srv := server.NewServer(settings)
 

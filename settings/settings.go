@@ -11,6 +11,7 @@ import (
 type Settings struct {
 	ConfigDir string
 	Config    config.Config
+	Port      int
 }
 
 func NewSettings() *Settings {
@@ -26,6 +27,7 @@ func NewSettings() *Settings {
 	return &Settings{
 		ConfigDir: configDir,
 		Config:    conf,
+		Port:      2222,
 	}
 }
 

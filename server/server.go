@@ -46,7 +46,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 	}
 
 	return &ssh.Server{
-		Addr:             ":2222",
+		Addr:             fmt.Sprintf(":%v", settings.Port),
 		Handler:          sessionHandler,
 		PublicKeyHandler: authHandler,
 	}
