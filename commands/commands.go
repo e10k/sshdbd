@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 
@@ -15,7 +17,14 @@ func HandleInstallCommand(args []string, settings *settings.Settings) {
 
 	configDir := settings.ConfigDir
 
-	err := os.MkdirAll(configDir, 0700)
+	_, err := os.Stat(configDir)
+	if err == nil {
+		log.Fatalf("config dir %v already exists", configDir)
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		log.Fatalf("unexpected error: %v", err)
+	}
+
+	err = os.MkdirAll(configDir, 0700)
 	if err != nil {
 		log.Fatalf("error creating the dir %s", err)
 	}
