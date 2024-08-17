@@ -12,9 +12,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func HandleInstallCommand(args []string, settings *settings.Settings) {
-	_ = args
-
+func HandleInstallCommand(settings *settings.Settings) {
 	configDir := settings.ConfigDir
 
 	_, err := os.Stat(configDir)
@@ -55,9 +53,7 @@ func HandleInstallCommand(args []string, settings *settings.Settings) {
 	f.WriteString(fmt.Sprintf("[connections.main]\nhost = %q\nport = %d\nusername = %q\npassword = %q\n\n", "localhost", 3306, "usr", "pass"))
 }
 
-func HandleServeCommand(args []string, settings *settings.Settings) {
-	_ = args
-
+func HandleServeCommand(settings *settings.Settings) {
 	err := settings.LoadConfig()
 	if err != nil {
 		log.Fatalf("error loading config: %v", err)
