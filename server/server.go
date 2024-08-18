@@ -20,7 +20,8 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 	sessionHandler := func(s ssh.Session) {
 		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
-			panic(err)
+			s.Stderr().Write([]byte(string(err.Error())))
+            return
 		}
 
 		conn, err := settings.Config.GetConnection(connId)
@@ -29,10 +30,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 			return
 		}
 
-		log.Printf("connId: %v, dbName: %v", connId, dbName)
-
 		databases, err := db.GetDatabases(conn)
-		log.Printf("databases: %#v", databases)
 
 		if !slices.Contains(databases, dbName) {
 			s.Stderr().Write([]byte(fmt.Sprintf("Couldn't find a database named '%v'.\n", dbName)))
@@ -41,7 +39,8 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 
 		err = db.Dump(conn, dbName, skippedTables, s, s.Stderr())
 		if err != nil {
-			panic(err)
+			s.Stderr().Write([]byte(string(err.Error())))
+			return
 		}
 	}
 
@@ -56,7 +55,7 @@ func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	for _, k := range getKeys("authorized_keys") {
 		known, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
 		if err != nil {
-			log.Printf("encountered invalid public key: %v\n", k)
+			log.Printf("invalid public key: %v\n", k)
 			continue
 		}
 

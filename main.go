@@ -20,23 +20,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	settings := settings.NewSettings()
+	settings, err := settings.NewSettings()
+	if err != nil {
+		fmt.Printf("Unexpected error: %v\n", err)
+		os.Exit(1)
+	}
 	if port != nil {
 		settings.Port = *port
 	}
 
-	var err error
+	var e error
 	switch *command {
 	case "install":
-		err = commands.HandleInstallCommand(settings)
+		e = commands.HandleInstallCommand(settings)
 	case "serve":
-		err = commands.HandleServeCommand(settings)
+		e = commands.HandleServeCommand(settings)
 	default:
-		err = fmt.Errorf("Unknown command: %s\n", *command)
+		e = fmt.Errorf("Unknown command: %s\n", *command)
 	}
 
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		os.Exit(1)
 	}
 }

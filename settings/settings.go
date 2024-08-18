@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -14,10 +14,10 @@ type Settings struct {
 	Port      int
 }
 
-func NewSettings() *Settings {
+func NewSettings() (*Settings, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("error obtaining the home dir: %s", err)
+		return nil, fmt.Errorf("error reading the home dir: %s", err)
 	}
 
 	configDir := home + "/.sshdbd"
@@ -28,13 +28,14 @@ func NewSettings() *Settings {
 		ConfigDir: configDir,
 		Config:    conf,
 		Port:      2222,
-	}
+	}, nil
 }
 
 func (s *Settings) LoadConfig() error {
-	_, err := toml.DecodeFile(s.ConfigDir+"/config.toml", &s.Config)
+	file := s.ConfigDir + "/config.toml"
+	_, err := toml.DecodeFile(file, &s.Config)
 	if err != nil {
-		return err
+		return fmt.Errorf("error decoding file %v: %v", file, err)
 	}
 
 	return nil
