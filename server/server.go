@@ -47,28 +47,28 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 		}
 	}
 
+	authHandler := func(ctx ssh.Context, key ssh.PublicKey) bool {
+		for _, k := range getKeys(settings.ConfigDir + "/authorized_keys") {
+			known, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
+			if err != nil {
+				log.Printf("invalid public key: %v\n", k)
+				continue
+			}
+
+			if ssh.KeysEqual(key, known) {
+				log.Printf("[%s] authenticated: %v\n", ctx.SessionID(), comment)
+				return true
+			}
+		}
+
+		return false
+	}
+
 	return &ssh.Server{
 		Addr:             fmt.Sprintf(":%v", settings.Port),
 		Handler:          sessionHandler,
 		PublicKeyHandler: authHandler,
 	}
-}
-
-func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
-	for _, k := range getKeys("authorized_keys") {
-		known, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
-		if err != nil {
-			log.Printf("invalid public key: %v\n", k)
-			continue
-		}
-
-		if ssh.KeysEqual(key, known) {
-			log.Printf("[%s] authenticated: %v\n", ctx.SessionID(), comment)
-			return true
-		}
-	}
-
-	return false
 }
 
 func getKeys(sourceFile string) []string {
