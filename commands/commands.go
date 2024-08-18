@@ -63,7 +63,7 @@ func HandleServeCommand(settings *settings.Settings) error {
 
 	// fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
-	log.Printf("Starting SSH server on port %v...", settings.Port)
+	log.Printf("Starting SSH server on port %v...\n", settings.Port)
 
 	srv := server.NewServer(settings)
 

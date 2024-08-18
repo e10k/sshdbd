@@ -9,9 +9,12 @@ import (
 	"os/exec"
 
 	"github.com/e10k/dbdl/config"
+	"github.com/gliderlabs/ssh"
 )
 
-func Dump(conn *config.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
+func Dump(s ssh.Session, conn *config.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
+	sessionId := s.Context().SessionID()
+
 	pr, pw := io.Pipe()
 
 	gz := gzip.NewWriter(pw)
@@ -37,11 +40,11 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 		dumpSchemaCmd.Stderr = errWriter
 		err := dumpSchemaCmd.Run()
 		if err != nil {
-			log.Printf("error dumping schema: %v\n", err)
-			log.Printf("killing process %v\n", dumpSchemaCmd.Process.Pid)
+			log.Printf("[%s] error dumping schema: %v\n", sessionId, err)
+			log.Printf("[%s] killing process %v\n", sessionId, dumpSchemaCmd.Process.Pid)
 			err2 := dumpSchemaCmd.Process.Kill()
 			if err2 != nil {
-				log.Printf("error killing process: %v\n", err2)
+				log.Printf("[%s] error killing process: %v\n", sessionId, err2)
 			}
 			return
 		}
@@ -68,11 +71,11 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 		err = dumpDataCmd.Run()
 
 		if err != nil {
-			log.Printf("error dumping data: %v\n", err)
-			log.Printf("killing process %v\n", dumpDataCmd.Process.Pid)
+			log.Printf("[%s] error dumping data: %v\n", sessionId, err)
+			log.Printf("[%s] killing process %v\n", sessionId, dumpDataCmd.Process.Pid)
 			err2 := dumpDataCmd.Process.Kill()
 			if err2 != nil {
-				log.Printf("error killing process: %v\n", err2)
+				log.Printf("[%s] error killing process: %v\n", sessionId, err2)
 			}
 			return
 		}
@@ -80,6 +83,8 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 
 	defer pr.Close()
 	io.Copy(outWriter, pr)
+
+	log.Printf("[%s] done\n", sessionId)
 
 	return nil
 }
