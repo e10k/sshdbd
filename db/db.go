@@ -8,12 +8,22 @@ import (
 	"os/exec"
 
 	"github.com/e10k/dbdl/config"
+	"github.com/schollz/progressbar/v3"
 )
 
 func Dump(conn *config.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
 	pr, pw := io.Pipe()
 
 	gz := gzip.NewWriter(pw)
+
+	bar := progressbar.NewOptions(1000,
+		progressbar.OptionSetWriter(errWriter),
+		progressbar.OptionEnableColorCodes(true),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionSetDescription("\033[FDumping..."),
+	)
+
+	mw := io.MultiWriter(errWriter, bar)
 
 	go func() {
 		defer pw.Close()
@@ -54,7 +64,7 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 		}
 
 		dumpDataCmd.Stdout = gz
-		dumpDataCmd.Stderr = errWriter
+		dumpDataCmd.Stderr = mw
 		dumpDataCmd.Run()
 	}()
 
