@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 
 	"github.com/e10k/dbdl/config"
@@ -34,7 +35,16 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 		)
 		dumpSchemaCmd.Stdout = gz
 		dumpSchemaCmd.Stderr = errWriter
-		dumpSchemaCmd.Run()
+		err := dumpSchemaCmd.Run()
+		if err != nil {
+			log.Printf("error dumping schema: %v\n", err)
+			log.Printf("killing process %v\n", dumpSchemaCmd.Process.Pid)
+			err2 := dumpSchemaCmd.Process.Kill()
+			if err2 != nil {
+				log.Printf("error killing process: %v\n", err2)
+			}
+			return
+		}
 
 		dumpDataCmd := exec.Command(
 			"mysqldump",
@@ -55,7 +65,17 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 
 		dumpDataCmd.Stdout = gz
 		dumpDataCmd.Stderr = errWriter
-		dumpDataCmd.Run()
+		err = dumpDataCmd.Run()
+
+		if err != nil {
+			log.Printf("error dumping data: %v\n", err)
+			log.Printf("killing process %v\n", dumpDataCmd.Process.Pid)
+			err2 := dumpDataCmd.Process.Kill()
+			if err2 != nil {
+				log.Printf("error killing process: %v\n", err2)
+			}
+			return
+		}
 	}()
 
 	defer pr.Close()
