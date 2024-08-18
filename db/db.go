@@ -3,10 +3,8 @@ package db
 import (
 	"compress/gzip"
 	"database/sql"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os/exec"
 
 	"github.com/e10k/dbdl/config"
@@ -51,12 +49,10 @@ func Dump(conn *config.Connection, dbName string, skippedTables []string, outWri
 			dbName,
 		)
 
-		log.Printf("skippedTables: %#v", skippedTables)
 		for _, t := range skippedTables {
 			dumpDataCmd.Args = append(dumpDataCmd.Args, fmt.Sprintf("--ignore-table=%v.%v", dbName, t))
 		}
 
-		log.Printf("args: %#v", dumpDataCmd.Args)
 		dumpDataCmd.Stdout = gz
 		dumpDataCmd.Stderr = errWriter
 		dumpDataCmd.Run()
@@ -73,13 +69,13 @@ func GetDatabases(conn *config.Connection) ([]string, error) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return nil, errors.New("could not connect to the database")
+		return nil, fmt.Errorf("failed connecting to the database: %v", err)
 	}
 	defer db.Close()
 
 	rows, err := db.Query("SHOW DATABASES;")
 	if err != nil {
-		return nil, errors.New("could not list the databases")
+		return nil, fmt.Errorf("failed listing the databases: %v", err)
 	}
 	defer rows.Close()
 
@@ -87,13 +83,13 @@ func GetDatabases(conn *config.Connection) ([]string, error) {
 	for rows.Next() {
 		var dbName string
 		if err := rows.Scan(&dbName); err != nil {
-			return nil, errors.New("failed fetching the databases")
+			return nil, fmt.Errorf("failed fetching the databases: %v", err)
 		}
 		databases = append(databases, dbName)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, errors.New("failed fetching the databases")
+		return nil, fmt.Errorf("error fetching the databases: %v", err)
 	}
 
 	return databases, nil

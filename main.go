@@ -16,7 +16,7 @@ func main() {
 	command, port := parseInput(os.Args)
 
 	if command == nil {
-		fmt.Println("You need to specify a command.")
+		fmt.Println("Please specify a command.")
 		os.Exit(1)
 	}
 
@@ -25,13 +25,18 @@ func main() {
 		settings.Port = *port
 	}
 
+	var err error
 	switch *command {
 	case "install":
-		commands.HandleInstallCommand(settings)
+		err = commands.HandleInstallCommand(settings)
 	case "serve":
-		commands.HandleServeCommand(settings)
+		err = commands.HandleServeCommand(settings)
 	default:
-		fmt.Printf("Unknown command: %s\n", *command)
+		err = fmt.Errorf("Unknown command: %s\n", *command)
+	}
+
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -50,7 +55,7 @@ func parseInput(args []string) (*string, *int) {
 		command = args[0]
 	}
 
-	flag.IntVar(&port, "port", 2222, "The port")
+	flag.IntVar(&port, "port", 2222, "Port")
 	flag.CommandLine.Parse(os.Args[2:])
 
 	return &command, &port

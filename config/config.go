@@ -19,7 +19,7 @@ type Config struct {
 func (c Config) GetConnection(connId string) (*Connection, error) {
 	conn, ok := c.Connections[connId]
 	if !ok {
-		return nil, fmt.Errorf("invalid connection id '%v'", connId)
+		return nil, fmt.Errorf("invalid connection id: '%v'", connId)
 	}
 
 	return &conn, nil

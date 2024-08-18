@@ -12,74 +12,78 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func HandleInstallCommand(settings *settings.Settings) {
+func HandleInstallCommand(settings *settings.Settings) error {
 	configDir := settings.ConfigDir
 
 	_, err := os.Stat(configDir)
 	if err == nil {
-		log.Fatalf("config dir %v already exists", configDir)
+		return fmt.Errorf("config dir %v already exists", configDir)
 	} else if !errors.Is(err, fs.ErrNotExist) {
-		log.Fatalf("unexpected error: %v", err)
+		return fmt.Errorf("unexpected error: %v", err)
 	}
 
 	err = os.MkdirAll(configDir, 0700)
 	if err != nil {
-		log.Fatalf("error creating the dir %s", err)
+		return fmt.Errorf("error creating directory %s", err)
 	}
 
 	authorizedKeysFile := configDir + "/authorized_keys"
 	f, err := os.Create(authorizedKeysFile)
 	if err != nil {
-		log.Fatalf("error creating %s: %s", authorizedKeysFile, err)
+		return fmt.Errorf("error creating %s: %s", authorizedKeysFile, err)
 	}
 
 	err = f.Chmod(0600)
 	if err != nil {
-		log.Fatalf("error setting permissions for %s: %s", authorizedKeysFile, err)
+		return fmt.Errorf("error setting permissions for %s: %s", authorizedKeysFile, err)
 	}
 
 	hk, err := server.GenerateHostKeyBytes()
 	hostKeyFile := configDir + "/hostkey.pem"
 	err = os.WriteFile(hostKeyFile, hk, 0600)
 	if err != nil {
-		log.Fatalf("error creating %s: %s", hostKeyFile, err)
+		return fmt.Errorf("error creating %s: %s", hostKeyFile, err)
 	}
 
 	configFile := configDir + "/config.toml"
 	f, err = os.Create(configFile)
 	if err != nil {
-		log.Fatalf("error creating %s: %s", configFile, err)
+		return fmt.Errorf("error creating %s: %s", configFile, err)
 	}
 	f.WriteString(fmt.Sprintf("[connections.main]\nhost = %q\nport = %d\nusername = %q\npassword = %q\n\n", "localhost", 3306, "usr", "pass"))
+
+	return nil
 }
 
-func HandleServeCommand(settings *settings.Settings) {
+func HandleServeCommand(settings *settings.Settings) error {
 	err := settings.LoadConfig()
 	if err != nil {
-		log.Fatalf("error loading config: %v", err)
+		return fmt.Errorf("error loading config: %v", err)
 	}
 
 	// fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
-	log.Printf("starting ssh server on port %v...", settings.Port)
+	log.Printf("Starting SSH server on port %v...", settings.Port)
 
 	srv := server.NewServer(settings)
 
 	hostKeyFile := settings.ConfigDir + "/hostkey.pem"
 	privateBytes, err := os.ReadFile(hostKeyFile)
 	if err != nil {
-		log.Fatal("failed to load private key: ", err)
+		return fmt.Errorf("failed to load private key: %v", err)
 	}
 
 	private, err := ssh.ParsePrivateKey(privateBytes)
 	if err != nil {
-		log.Fatal("failed to parse private key: ", err)
+		return fmt.Errorf("failed to parse private key: %v", err)
 	}
 
 	srv.AddHostKey(private)
 
 	err = srv.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("serve error: %v", err)
 	}
+
+	return nil
 }
