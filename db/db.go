@@ -39,9 +39,10 @@ func Dump(s ssh.Session, conn *config.Connection, dbName string, skippedTables [
 		dumpSchemaCmd.Stdout = gz
 		dumpSchemaCmd.Stderr = errWriter
 		err := dumpSchemaCmd.Run()
+
 		if err != nil {
-			log.Printf("[%s] error dumping schema: %v\n", sessionId, err)
-			log.Printf("[%s] making sure process PID %v is gone\n", sessionId, dumpSchemaCmd.Process.Pid)
+			log.Printf("[%s] dumping interrupted: %v\n", sessionId, err)
+			log.Printf("[%s] cleaning up (making sure process PID %v is gone)\n", sessionId, dumpSchemaCmd.Process.Pid)
 			err2 := dumpSchemaCmd.Process.Kill()
 			if err2 != nil {
 				log.Printf("[%s] error killing process: %v\n", sessionId, err2)
@@ -71,8 +72,8 @@ func Dump(s ssh.Session, conn *config.Connection, dbName string, skippedTables [
 		err = dumpDataCmd.Run()
 
 		if err != nil {
-			log.Printf("[%s] error dumping data: %v\n", sessionId, err)
-			log.Printf("[%s] making sure process PID %v is gone\n", sessionId, dumpDataCmd.Process.Pid)
+			log.Printf("[%s] dumping interrupted: %v\n", sessionId, err)
+			log.Printf("[%s] cleaning up (making sure process PID %v is gone)\n", sessionId, dumpDataCmd.Process.Pid)
 			err2 := dumpDataCmd.Process.Kill()
 			if err2 != nil {
 				log.Printf("[%s] error killing process: %v\n", sessionId, err2)
