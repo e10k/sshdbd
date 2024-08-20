@@ -1,66 +1,54 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"log"
 	"os"
-	"strings"
-
-	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/e10k/dbdl/commands"
 	"github.com/e10k/dbdl/settings"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	command, port := parseInput(os.Args)
-
-	if command == nil {
-		fmt.Println("Please specify a command.")
-		os.Exit(1)
-	}
-
 	settings, err := settings.NewSettings()
 	if err != nil {
 		fmt.Printf("Unexpected error: %v\n", err)
 		os.Exit(1)
 	}
-	if port != nil {
-		settings.Port = *port
+
+	app := &cli.App{
+		Commands: []*cli.Command{
+			{
+				Name:    "install",
+				Aliases: []string{"i"},
+				Usage:   "create the configuration directory and the required files",
+				Action: func(cCtx *cli.Context) error {
+					return commands.HandleInstallCommand(settings)
+				},
+			},
+			{
+				Name:    "serve",
+				Aliases: []string{"s"},
+				Usage:   "start the SSH server",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:        "port",
+						Value:       settings.Port,
+						Usage:       "listen on port `PORT`",
+						Aliases:     []string{"p"},
+						Destination: &settings.Port,
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					return commands.HandleServeCommand(settings)
+				},
+			},
+		},
 	}
 
-	var e error
-	switch *command {
-	case "install":
-		e = commands.HandleInstallCommand(settings)
-	case "serve":
-		e = commands.HandleServeCommand(settings)
-	default:
-		e = fmt.Errorf("Unknown command: %s\n", *command)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
 	}
-
-	if e != nil {
-		fmt.Println(e)
-		os.Exit(1)
-	}
-}
-
-func parseInput(args []string) (*string, *int) {
-	var command string
-	var port int
-
-	args = args[1:]
-	if len(args) == 0 {
-		return nil, nil
-	}
-
-	// the first argument is considered to be the command, as long as it's not actually a flag
-	if !strings.HasPrefix(args[0], "-") {
-		command = args[0]
-	}
-
-	flag.IntVar(&port, "port", 2222, "Port")
-	flag.CommandLine.Parse(os.Args[2:])
-
-	return &command, &port
 }
