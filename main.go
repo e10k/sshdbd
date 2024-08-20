@@ -19,7 +19,7 @@ func main() {
 	}
 
 	app := &cli.App{
-        Usage: "A SSH server for downloading database dumps",
+		Usage: "A SSH server for downloading database dumps",
 		Commands: []*cli.Command{
 			{
 				Name:    "install",
