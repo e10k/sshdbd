@@ -8,11 +8,11 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/e10k/dbdl/config"
+	"github.com/e10k/dbdl/connections"
 	"github.com/gliderlabs/ssh"
 )
 
-func Dump(s ssh.Session, conn *config.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
+func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
 	sessionId := s.Context().SessionID()
 
 	pr, pw := io.Pipe()
@@ -90,7 +90,7 @@ func Dump(s ssh.Session, conn *config.Connection, dbName string, skippedTables [
 	return nil
 }
 
-func GetDatabases(conn *config.Connection) ([]string, error) {
+func GetDatabases(conn *connections.Connection) ([]string, error) {
 	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/?charset=utf8mb4&parseTime=True&loc=Local", conn.Username, conn.Password, conn.Host, conn.Port)
 
 	db, err := sql.Open("mysql", dsn)

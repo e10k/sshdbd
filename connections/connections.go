@@ -1,4 +1,4 @@
-package config
+package connections
 
 import (
 	"fmt"
@@ -12,12 +12,10 @@ type Connection struct {
 	Password string
 }
 
-type Config struct {
-	Connections map[string]Connection
-}
+type Connections map[string]Connection
 
-func (c Config) GetConnection(connId string) (*Connection, error) {
-	conn, ok := c.Connections[connId]
+func (c Connections) GetConnection(connId string) (*Connection, error) {
+	conn, ok := c[connId]
 	if !ok {
 		return nil, fmt.Errorf("invalid connection id: '%v'", connId)
 	}

@@ -26,7 +26,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 			return
 		}
 
-		conn, err := settings.Config.GetConnection(connId)
+		conn, err := settings.Connections.GetConnection(connId)
 		if err != nil {
 			s.Stderr().Write([]byte(string(err.Error())))
 			return

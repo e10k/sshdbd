@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/e10k/dbdl/config"
+	"github.com/e10k/dbdl/connections"
 )
 
 type Settings struct {
 	ConfigDir string
-	Config    config.Config
+	Connections    connections.Connections
 	Port      int
 }
 
@@ -22,18 +22,18 @@ func NewSettings() (*Settings, error) {
 
 	configDir := home + "/.sshdbd"
 
-	var conf config.Config
+	var connections connections.Connections
 
 	return &Settings{
 		ConfigDir: configDir,
-		Config:    conf,
+		Connections:    connections,
 		Port:      2222,
 	}, nil
 }
 
-func (s *Settings) LoadConfig() error {
-	file := s.ConfigDir + "/config.toml"
-	_, err := toml.DecodeFile(file, &s.Config)
+func (s *Settings) LoadConnections() error {
+	file := s.ConfigDir + "/connections.toml"
+	_, err := toml.DecodeFile(file, &s.Connections)
 	if err != nil {
 		return fmt.Errorf("error decoding file %v: %v", file, err)
 	}

@@ -45,23 +45,21 @@ func HandleInstallCommand(settings *settings.Settings) error {
 		return fmt.Errorf("error creating %s: %s", hostKeyFile, err)
 	}
 
-	configFile := configDir + "/config.toml"
-	f, err = os.Create(configFile)
+	connectionsFile := configDir + "/connections.toml"
+	f, err = os.Create(connectionsFile)
 	if err != nil {
-		return fmt.Errorf("error creating %s: %s", configFile, err)
+		return fmt.Errorf("error creating %s: %s", connectionsFile, err)
 	}
-	f.WriteString(fmt.Sprintf("[connections.main]\nhost = %q\nport = %d\nusername = %q\npassword = %q\n\n", "localhost", 3306, "usr", "pass"))
+	f.WriteString(fmt.Sprintf("[main]\nhost = %q\nport = %d\nusername = %q\npassword = %q\n\n", "localhost", 3306, "usr", "pass"))
 
 	return nil
 }
 
 func HandleServeCommand(settings *settings.Settings) error {
-	err := settings.LoadConfig()
+	err := settings.LoadConnections()
 	if err != nil {
-		return fmt.Errorf("error loading config: %v", err)
+		return fmt.Errorf("error loading connections: %v", err)
 	}
-
-	// fmt.Fprintf(os.Stderr, "conf: %v\n", conf)
 
 	log.Printf("Starting SSH server on port %v...\n", settings.Port)
 
