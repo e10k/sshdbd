@@ -7,13 +7,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/e10k/dbdl/config"
 	"github.com/e10k/dbdl/server"
-	"github.com/e10k/dbdl/settings"
 	"golang.org/x/crypto/ssh"
 )
 
-func HandleInstallCommand(settings *settings.Settings) error {
-	configDir := settings.ConfigDir
+func HandleInstallCommand(config *config.Config) error {
+	configDir := config.ConfigDir
 
 	_, err := os.Stat(configDir)
 	if err == nil {
@@ -55,17 +55,17 @@ func HandleInstallCommand(settings *settings.Settings) error {
 	return nil
 }
 
-func HandleServeCommand(settings *settings.Settings) error {
-	err := settings.LoadConnections()
+func HandleServeCommand(config *config.Config) error {
+	err := config.LoadConnections()
 	if err != nil {
 		return fmt.Errorf("error loading connections: %v", err)
 	}
 
-	log.Printf("Starting SSH server on port %v...\n", settings.Port)
+	log.Printf("Starting SSH config on port %v...\n", config.Port)
 
-	srv := server.NewServer(settings)
+	srv := server.NewServer(config)
 
-	hostKeyFile := settings.ConfigDir + "/hostkey.pem"
+	hostKeyFile := config.ConfigDir + "/hostkey.pem"
 	privateBytes, err := os.ReadFile(hostKeyFile)
 	if err != nil {
 		return fmt.Errorf("failed to load private key: %v", err)

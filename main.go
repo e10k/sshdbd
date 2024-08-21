@@ -6,13 +6,13 @@ import (
 	"os"
 
 	"github.com/e10k/dbdl/commands"
-	"github.com/e10k/dbdl/settings"
+	"github.com/e10k/dbdl/config"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	settings, err := settings.NewSettings()
+	config, err := config.NewConfig()
 	if err != nil {
 		fmt.Printf("Unexpected error: %v\n", err)
 		os.Exit(1)
@@ -26,7 +26,7 @@ func main() {
 				Aliases: []string{"i"},
 				Usage:   "create the configuration directory and the required files",
 				Action: func(cCtx *cli.Context) error {
-					return commands.HandleInstallCommand(settings)
+					return commands.HandleInstallCommand(config)
 				},
 			},
 			{
@@ -36,14 +36,14 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.IntFlag{
 						Name:        "port",
-						Value:       settings.Port,
+						Value:       config.Port,
 						Usage:       "listen on port `PORT`",
 						Aliases:     []string{"p"},
-						Destination: &settings.Port,
+						Destination: &config.Port,
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
-					return commands.HandleServeCommand(settings)
+					return commands.HandleServeCommand(config)
 				},
 			},
 		},

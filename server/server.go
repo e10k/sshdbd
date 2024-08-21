@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	"github.com/e10k/dbdl/db"
-	"github.com/e10k/dbdl/settings"
+	"github.com/e10k/dbdl/config"
 	"github.com/gliderlabs/ssh"
 )
 
-func NewServer(settings *settings.Settings) *ssh.Server {
+func NewServer(config *config.Config) *ssh.Server {
 	sessionHandler := func(s ssh.Session) {
 		log.Printf("[%s] request input: %s\n", s.Context().SessionID(), s.User())
 
@@ -26,7 +26,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 			return
 		}
 
-		conn, err := settings.Connections.GetConnection(connId)
+		conn, err := config.Connections.GetConnection(connId)
 		if err != nil {
 			s.Stderr().Write([]byte(string(err.Error())))
 			return
@@ -48,7 +48,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 	}
 
 	authHandler := func(ctx ssh.Context, key ssh.PublicKey) bool {
-		for _, k := range getKeys(settings.ConfigDir + "/authorized_keys") {
+		for _, k := range getKeys(config.ConfigDir + "/authorized_keys") {
 			known, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
 			if err != nil {
 				log.Printf("invalid public key: %v\n", k)
@@ -65,7 +65,7 @@ func NewServer(settings *settings.Settings) *ssh.Server {
 	}
 
 	return &ssh.Server{
-		Addr:             fmt.Sprintf(":%v", settings.Port),
+		Addr:             fmt.Sprintf(":%v", config.Port),
 		Handler:          sessionHandler,
 		PublicKeyHandler: authHandler,
 	}
