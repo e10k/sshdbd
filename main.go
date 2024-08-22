@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/e10k/dbdl/commands"
-	"github.com/e10k/dbdl/config"
+	"github.com/e10k/sshdbd/commands"
+	"github.com/e10k/sshdbd/config"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/urfave/cli/v2"
 )

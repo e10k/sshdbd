@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/e10k/dbdl/db"
-	"github.com/e10k/dbdl/config"
+	"github.com/e10k/sshdbd/db"
+	"github.com/e10k/sshdbd/config"
 	"github.com/gliderlabs/ssh"
 )
 

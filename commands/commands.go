@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/e10k/dbdl/config"
-	"github.com/e10k/dbdl/server"
+	"github.com/e10k/sshdbd/config"
+	"github.com/e10k/sshdbd/server"
 	"golang.org/x/crypto/ssh"
 )
 

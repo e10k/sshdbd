@@ -8,7 +8,7 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/e10k/dbdl/connections"
+	"github.com/e10k/sshdbd/connections"
 	"github.com/gliderlabs/ssh"
 )
 

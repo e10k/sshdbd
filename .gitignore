@@ -1,7 +1,6 @@
 .DS_Store
-config.toml
-authorized_keys
 bin
 deploy.sh
+TODO.md
 
 

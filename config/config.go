@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/e10k/dbdl/connections"
+	"github.com/e10k/sshdbd/connections"
 )
 
 type Config struct {
-	ConfigDir string
-	Connections    connections.Connections
-	Port      int
+	ConfigDir   string
+	Connections connections.Connections
+	Port        int
 }
 
 func NewConfig() (*Config, error) {
@@ -25,9 +25,9 @@ func NewConfig() (*Config, error) {
 	var connections connections.Connections
 
 	return &Config{
-		ConfigDir: configDir,
-		Connections:    connections,
-		Port:      2222,
+		ConfigDir:   configDir,
+		Connections: connections,
+		Port:        2222,
 	}, nil
 }
 

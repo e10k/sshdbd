@@ -1,4 +1,4 @@
-module github.com/e10k/dbdl
+module github.com/e10k/sshdbd
 
 go 1.21.1
 
