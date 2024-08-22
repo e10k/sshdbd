@@ -36,7 +36,7 @@ func TestGetConnection(t *testing.T) {
 	}
 
 	_, err := c.GetConnection("c3")
-	expectedErr := errors.New("invalid connection id: 'c3'")
+	expectedErr := errors.New("invalid connection id: 'c3'\n")
 	if err.Error() != expectedErr.Error() {
 		t.Errorf("wanted error %q, got %q", expectedErr, err)
 	}

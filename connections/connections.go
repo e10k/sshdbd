@@ -17,7 +17,7 @@ type Connections map[string]Connection
 func (c Connections) GetConnection(connId string) (*Connection, error) {
 	conn, ok := c[connId]
 	if !ok {
-		return nil, fmt.Errorf("invalid connection id: '%v'", connId)
+		return nil, fmt.Errorf("invalid connection id: '%v'\n", connId)
 	}
 
 	return &conn, nil
