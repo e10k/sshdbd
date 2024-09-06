@@ -35,6 +35,7 @@ func NewServer(config *config.Config) *ssh.Server {
 		databases, err := db.GetDatabases(conn)
 		if err != nil {
 			s.Stderr().Write([]byte(string(err.Error())))
+			return
 		}
 
 		if !slices.Contains(databases, dbName) {

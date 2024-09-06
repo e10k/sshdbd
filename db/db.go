@@ -101,12 +101,12 @@ func GetDatabases(conn *connections.Connection) ([]string, error) {
 
 	err = db.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("failed pinging the database server: %v", err)
+		return nil, fmt.Errorf("failed pinging the database server: %v\n", err)
 	}
 
 	rows, err := db.Query("SHOW DATABASES;")
 	if err != nil {
-		return nil, fmt.Errorf("failed listing the databases: %v", err)
+		return nil, fmt.Errorf("failed listing the databases: %v\n", err)
 	}
 	defer rows.Close()
 
@@ -114,13 +114,13 @@ func GetDatabases(conn *connections.Connection) ([]string, error) {
 	for rows.Next() {
 		var dbName string
 		if err := rows.Scan(&dbName); err != nil {
-			return nil, fmt.Errorf("failed fetching the databases: %v", err)
+			return nil, fmt.Errorf("failed fetching the databases: %v\n", err)
 		}
 		databases = append(databases, dbName)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error fetching the databases: %v", err)
+		return nil, fmt.Errorf("error fetching the databases: %v\n", err)
 	}
 
 	return databases, nil
