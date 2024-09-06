@@ -95,9 +95,14 @@ func GetDatabases(conn *connections.Connection) ([]string, error) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed connecting to the database: %v", err)
+		return nil, fmt.Errorf("failed connecting to the database server: %v", err)
 	}
 	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("failed pinging the database server: %v", err)
+	}
 
 	rows, err := db.Query("SHOW DATABASES;")
 	if err != nil {

@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/e10k/sshdbd/db"
 	"github.com/e10k/sshdbd/config"
+	"github.com/e10k/sshdbd/db"
 	"github.com/gliderlabs/ssh"
 )
 
@@ -33,6 +33,9 @@ func NewServer(config *config.Config) *ssh.Server {
 		}
 
 		databases, err := db.GetDatabases(conn)
+		if err != nil {
+			s.Stderr().Write([]byte(string(err.Error())))
+		}
 
 		if !slices.Contains(databases, dbName) {
 			s.Stderr().Write([]byte(fmt.Sprintf("Couldn't find a database named '%v'.\n", dbName)))
