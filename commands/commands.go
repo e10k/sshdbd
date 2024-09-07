@@ -61,8 +61,6 @@ func HandleServeCommand(config *config.Config) error {
 		return fmt.Errorf("error loading connections: %v", err)
 	}
 
-	log.Printf("Starting SSH server on port %v...\n", config.Port)
-
 	srv := server.NewServer(config)
 
 	hostKeyFile := config.ConfigDir + "/hostkey.pem"
@@ -77,6 +75,8 @@ func HandleServeCommand(config *config.Config) error {
 	}
 
 	srv.AddHostKey(private)
+
+	log.Printf("Running SSH server on port %v...\n", config.Port)
 
 	err = srv.ListenAndServe()
 	if err != nil {

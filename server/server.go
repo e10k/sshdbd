@@ -18,7 +18,9 @@ import (
 
 func NewServer(config *config.Config) *ssh.Server {
 	sessionHandler := func(s ssh.Session) {
-		log.Printf("[%s] request input: %s\n", s.Context().SessionID(), s.User())
+		sessionId := s.Context().SessionID()[:10]
+
+		log.Printf("[%s] request input: %s\n", sessionId, s.User())
 
 		connId, dbName, skippedTables, err := parseInput(s.User())
 		if err != nil {
@@ -43,7 +45,7 @@ func NewServer(config *config.Config) *ssh.Server {
 			return
 		}
 
-		log.Printf("[%s] dumping...\n", s.Context().SessionID())
+		log.Printf("[%s] dumping...\n", sessionId)
 		err = db.Dump(s, conn, dbName, skippedTables, s, s.Stderr())
 		if err != nil {
 			s.Stderr().Write([]byte(string(err.Error())))
@@ -60,7 +62,7 @@ func NewServer(config *config.Config) *ssh.Server {
 			}
 
 			if ssh.KeysEqual(key, known) {
-				log.Printf("[%s] authenticated: %v\n", ctx.SessionID(), comment)
+                log.Printf("[%s] authenticated: %v\n", ctx.SessionID()[:10], comment)
 				return true
 			}
 		}

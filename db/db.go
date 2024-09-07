@@ -13,7 +13,7 @@ import (
 )
 
 func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTables []string, outWriter io.Writer, errWriter io.Writer) error {
-	sessionId := s.Context().SessionID()
+	sessionId := s.Context().SessionID()[:10]
 
 	pr, pw := io.Pipe()
 
@@ -86,6 +86,7 @@ func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTab
 	io.Copy(outWriter, pr)
 
 	log.Printf("[%s] done\n", sessionId)
+	errWriter.Write([]byte("\n🏁 Done.\n"))
 
 	return nil
 }
