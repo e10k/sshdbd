@@ -26,7 +26,12 @@ func main() {
 				Aliases: []string{"i"},
 				Usage:   "create the configuration directory and the required files",
 				Action: func(cCtx *cli.Context) error {
-					return commands.HandleInstallCommand(config)
+					err := commands.HandleInstallCommand(config)
+					if err == nil {
+						fmt.Printf("Successfully created the configuration directory and the required files (see %s).\n", config.ConfigDir)
+					}
+
+					return err
 				},
 			},
 			{
