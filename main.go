@@ -24,7 +24,7 @@ func main() {
 			{
 				Name:    "install",
 				Aliases: []string{"i"},
-				Usage:   "create the configuration directory and the required files",
+				Usage:   "Creates the configuration directory and the required files",
 				Action: func(cCtx *cli.Context) error {
 					err := commands.HandleInstallCommand(config)
 					if err == nil {
@@ -37,7 +37,7 @@ func main() {
 			{
 				Name:    "serve",
 				Aliases: []string{"s"},
-				Usage:   "start the SSH server",
+				Usage:   "Starts the SSH server",
 				Flags: []cli.Flag{
 					&cli.IntFlag{
 						Name:        "port",
