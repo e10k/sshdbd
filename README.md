@@ -2,19 +2,6 @@
 
 Shdibbidy allows for the creation and streaming of MySQL database dumps over SSH without requiring full SSH access to the server that performs the dumping.
 
-```mermaid  
-sequenceDiagram
-actor User
-    User-)sshdbd: connect
-    sshdbd-)sshdbd: authorization based on public key
-    sshdbd--)DB server: checks database exists
-    sshdbd -) DB server: run mysqldump
-    DB server-)sshdbd: dump
-    sshdbd--)sshdbd: gzip
-    sshdbd-)User: stdout: gzipped dump
-    sshdbd-)User: stderr: progress
-```
-
 ## Usage
 
 ```
@@ -35,19 +22,17 @@ GLOBAL OPTIONS:
    --help, -h  show help
 ```
 
-The program supports 2 commands: `install` and `serve`.
+| Command | Description |
+| --- | :--- |
+| `install` | Creates a `~/.sshdbd` directory containing 3 files: <ul><li>`hostkey.pem` is the private key that will be used by the SSH server</li><li>`authorized_keys` is the place for adding client public keys; similar to `~/.ssh/authorized_keys`</li><li>`connections.toml` defines the database connections that are made available to clients</li></ul> |
+| `serve` | Starts a SSH server on port `2222`. Use the `--port` option to specify a different port. |
 
-`install` will create a `~/.sshdbd` directory containing 3 files:
-- `hostkey.pem` is the private key that will be used by the SSH server
-- `authorized_keys` is the place for adding client public keys; similar to `~/.ssh/authorized_keys`
-- `connections.toml` defines the database connections that are made available to clients
-
-`serve` starts a SSH server on port `2222`. Use the `--port` option to specify a different port.
+----------
 
 Once the server is running, clients can connect to it using a SSH command like the following:
 
 ```
-ssh CONNID:DBNAME:SKIPPED_TABLES@IP -pPORT -T > dump.gz
+ssh CONNID:DBNAME:SKIPPED_TABLES@IP -pPORT -T > dump.sql.gz
 ```
 where:
 - CONNID is the connection ID, as specified in `connections.toml`
