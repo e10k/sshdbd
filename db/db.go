@@ -26,7 +26,6 @@ func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTab
 		dumpSchemaCmd := exec.Command(
 			"mysqldump",
 			"--single-transaction",
-			"--databases",
 			"--no-data",
 			"--skip-add-drop-table",
 			"--verbose",
@@ -53,7 +52,6 @@ func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTab
 		dumpDataCmd := exec.Command(
 			"mysqldump",
 			"--single-transaction",
-			"--tz-utc=false",
 			"--no-create-info",
 			"--verbose",
 			"-h",
