@@ -84,7 +84,7 @@ func Dump(s ssh.Session, conn *connections.Connection, dbName string, skippedTab
 	io.Copy(outWriter, pr)
 
 	log.Printf("[%s] done\n", sessionId)
-	errWriter.Write([]byte("\n🏁 Done.\n"))
+	errWriter.Write([]byte("\n🏁 Finished dumping.\n"))
 
 	return nil
 }
